@@ -93,7 +93,7 @@
             }
             
             log('Connecting to AI server...');
-            socket = io('http://localhost:8090');
+            socket = io('https://voicesheild-prototype.onrender.com');
             
             socket.on('connect', () => {
                 log('✅ Connected to AI server');
