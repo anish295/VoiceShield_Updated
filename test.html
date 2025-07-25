@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Detection Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <h1>AI Detection Test</h1>
+    
+    <div id="status" class="status disconnected">
+        Status: Disconnected
+    </div>
+    
+    <div>
+        <button id="connectBtn" class="btn-primary">Connect to AI Server</button>
+        <button id="testFacialBtn" class="btn-success">Test Facial Analysis</button>
+        <button id="testAudioBtn" class="btn-success">Test Audio Analysis</button>
+        <button id="clearLogBtn" class="btn-danger">Clear Log</button>
+    </div>
+    
+    <h3>Log:</h3>
+    <div id="log" class="log"></div>
+    
+    <h3>Last Analysis Result:</h3>
+    <div id="result" class="log"></div>
+
+    <script>
+        let socket = null;
+        let isConnected = false;
+        
+        const statusDiv = document.getElementById('status');
+        const logDiv = document.getElementById('log');
+        const resultDiv = document.getElementById('result');
+        const connectBtn = document.getElementById('connectBtn');
+        const testFacialBtn = document.getElementById('testFacialBtn');
+        const testAudioBtn = document.getElementById('testAudioBtn');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function updateStatus(connected) {
+            isConnected = connected;
+            statusDiv.className = connected ? 'status connected' : 'status disconnected';
+            statusDiv.textContent = `Status: ${connected ? 'Connected' : 'Disconnected'}`;
+            connectBtn.textContent = connected ? 'Disconnect' : 'Connect to AI Server';
+        }
+        
+        function connectToServer() {
+            if (socket && isConnected) {
+                socket.disconnect();
+                return;
+            }
+            
+            log('Connecting to AI server...');
+            socket = io('http://localhost:8090');
+            
+            socket.on('connect', () => {
+                log('✅ Connected to AI server');
+                updateStatus(true);
+            });
+            
+            socket.on('disconnect', () => {
+                log('❌ Disconnected from AI server');
+                updateStatus(false);
+            });
+            
+            socket.on('emotion_analysis', (data) => {
+                log('📊 Received emotion analysis:');
+                log(JSON.stringify(data, null, 2));
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            });
+            
+            socket.on('status', (data) => {
+                log(`📡 Server status: ${data.message}`);
+            });
+            
+            socket.on('error', (data) => {
+                log(`❌ Server error: ${data.message}`);
+            });
+        }
+        
+        function testFacialAnalysis() {
+            if (!isConnected) {
+                log('❌ Not connected to server');
+                return;
+            }
+            
+            // Simulate facial expressions data
+            const testExpressions = {
+                neutral: 0.1,
+                happy: 0.05,
+                sad: 0.1,
+                angry: 0.7,  // High anger for testing
+                fearful: 0.05,
+                disgusted: 0.05,
+                surprised: 0.05
+            };
+            
+            log('🧠 Sending test facial data...');
+            log(`Facial expressions: ${JSON.stringify(testExpressions)}`);
+            
+            socket.emit('facial_analysis', {
+                expressions: testExpressions,
+                timestamp: Date.now()
+            });
+        }
+        
+        function testAudioAnalysis() {
+            if (!isConnected) {
+                log('❌ Not connected to server');
+                return;
+            }
+            
+            // Simulate audio data
+            const testAudioData = 'test_audio_data_' + Date.now();
+            
+            log('🎤 Sending test audio data...');
+            log(`Audio data length: ${testAudioData.length} characters`);
+            
+            socket.emit('audio', {
+                data: testAudioData,
+                timestamp: Date.now()
+            });
+        }
+        
+        function clearLog() {
+            logDiv.innerHTML = '';
+            resultDiv.textContent = '';
+        }
+        
+        // Event listeners
+        connectBtn.addEventListener('click', connectToServer);
+        testFacialBtn.addEventListener('click', testFacialAnalysis);
+        testAudioBtn.addEventListener('click', testAudioAnalysis);
+        clearLogBtn.addEventListener('click', clearLog);
+        
+        // Initial log
+        log('🚀 AI Detection Test Page Loaded');
+        log('Click "Connect to AI Server" to begin testing');
+    </script>
+</body>
+</html> 

@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Shield: AI-Powered Aggression Detector</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Socket.IO client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 2rem;
+            max-width: 1000px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            border-radius: 1rem;
+            overflow: hidden;
+            background-color: #000;
+        }
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+            transform: scaleX(-1);
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+        }
+        .score-display {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+        .score-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            text-align: center;
+            min-width: 100px;
+        }
+        .score-card h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        .score-card .score {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .emotions-display {
+            width: 100%;
+            max-width: 400px;
+            background-color: #f9fafb;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            box-shadow: inset 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+        .ai-analysis {
+            width: 100%;
+            max-width: 400px;
+            background-color: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .audio-visualizer {
+            width: 100%;
+            max-width: 400px;
+            height: 60px;
+            background-color: #f3f4f6;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        .audio-bars {
+            display: flex;
+            gap: 2px;
+            align-items: end;
+            height: 40px;
+        }
+        .audio-bar {
+            width: 4px;
+            background-color: #3b82f6;
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+        }
+        .message-box {
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1rem;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .message-box.show {
+            display: block;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-gray-800 text-center">Voice Shield: AI-Powered Aggression Detector</h1>
+        <p class="text-gray-600 text-center">
+            Advanced emotion detection using facial expressions and voice analysis.
+            <br>Please grant camera and microphone access to begin.
+        </p>
+        <div class="video-container">
+            <video id="videoInput" autoplay muted playsinline></video>
+            <canvas id="overlayCanvas"></canvas>
+        </div>
+        <div id="voiceDetectionTab" class="emotions-display" style="margin-top:1rem;max-width:400px;">
+            <strong>Voice Detection:</strong> <span id="voiceDetectionText">-</span>
+        </div>
+        <div class="audio-visualizer">
+            <div id="audioBars" class="audio-bars"></div>
+        </div>
+        <div class="score-display">
+            <div class="score-card">
+                <h4>Facial Score</h4>
+                <div id="facialScore" class="score">0%</div>
+            </div>
+            <div class="score-card">
+                <h4>Voice Score</h4>
+                <div id="voiceScore" class="score">0%</div>
+            </div>
+            <div class="score-card">
+                <h4>Combined Score</h4>
+                <div id="combinedScore" class="score">0%</div>
+            </div>
+            <div class="score-card">
+                <h4>Faces Detected</h4>
+                <div id="faceCount" class="score">0</div>
+            </div>
+        </div>
+        <div id="emotionsDisplay" class="emotions-display">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <p><strong>Facial Emotion Probabilities:</strong></p>
+                <span id="multiFaceIndicator" style="display:none;color:#ef4444;font-weight:600;font-size:0.95em;">Multiple Faces Detected</span>
+            </div>
+            <p id="emotionNeutral">Neutral: 0%</p>
+            <p id="emotionHappy">Happy: 0%</p>
+            <p id="emotionSad">Sad: 0%</p>
+            <p id="emotionAngry">Angry: 0%</p>
+            <p id="emotionFearful">Fearful: 0%</p>
+            <p id="emotionDisgusted">Disgusted: 0%</p>
+            <p id="emotionSurprised">Surprised: 0%</p>
+        </div>
+        <div id="aiAnalysis" class="ai-analysis" style="display: none;">
+            <h3>AI Analysis Results</h3>
+            <p id="aiVoiceEmotion">Voice Emotion: Analyzing...</p>
+            <p id="aiConfidence">Confidence: 0%</p>
+            <p id="aiRecommendation">Recommendation: No action needed</p>
+        </div>
+        <div class="status-indicator">
+            <div id="statusDot" class="status-dot"></div>
+            <span id="statusText">Disconnected</span>
+            <span id="listeningIndicator" style="display:none;margin-left:10px;color:#3b82f6;font-weight:600;">🎤 Listening...</span>
+        </div>
+        <div class="button-group">
+            <button id="startButton" class="btn btn-primary">Start Detection</button>
+            <button id="stopButton" class="btn btn-danger" disabled>Stop Detection</button>
+            <button id="connectButton" class="btn btn-success">Connect to AI Server</button>
+        </div>
+        <div id="loadingMessage" class="message-box show">
+            Loading facial recognition models... Please wait.
+        </div>
+        <div id="errorMessage" class="message-box">
+            An error occurred. Please ensure camera and microphone access is granted.
+        </div>
+        <div id="aggressionPopup" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;justify-content:center;align-items:center;">
+            <div style="background:white;padding:2rem 3rem;border-radius:1rem;box-shadow:0 4px 24px rgba(0,0,0,0.2);font-size:1.5rem;font-weight:700;color:#ef4444;text-align:center;">
+                Aggression Detected
+            </div>
+        </div>
+    </div>
+
+    <!-- face-api.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+    <script>
+        // DOM Elements
+        const videoInput = document.getElementById('videoInput');
+        const overlayCanvas = document.getElementById('overlayCanvas');
+        const emotionsDisplay = document.getElementById('emotionsDisplay');
+        const emotionNeutral = document.getElementById('emotionNeutral');
+        const emotionHappy = document.getElementById('emotionHappy');
+        const emotionSad = document.getElementById('emotionSad');
+        const emotionAngry = document.getElementById('emotionAngry');
+        const emotionFearful = document.getElementById('emotionFearful');
+        const emotionDisgusted = document.getElementById('emotionDisgusted');
+        const emotionSurprised = document.getElementById('emotionSurprised');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const connectButton = document.getElementById('connectButton');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const audioBars = document.getElementById('audioBars');
+        const aiAnalysis = document.getElementById('aiAnalysis');
+        const aiVoiceEmotion = document.getElementById('aiVoiceEmotion');
+        const aiConfidence = document.getElementById('aiConfidence');
+        const aiRecommendation = document.getElementById('aiRecommendation');
+        const facialScore = document.getElementById('facialScore');
+        const voiceScore = document.getElementById('voiceScore');
+        const combinedScore = document.getElementById('combinedScore');
+        const faceCountDisplay = document.getElementById('faceCount');
+        const multiFaceIndicator = document.getElementById('multiFaceIndicator');
+        const multiVoiceIndicator = document.getElementById('multiVoiceIndicator');
+        const aggressionPopup = document.getElementById('aggressionPopup');
+        const listeningIndicator = document.getElementById('listeningIndicator');
+        const voiceDetectionText = document.getElementById('voiceDetectionText');
+
+        // State variables
+        let mediaRecorder = null;
+        let audioStream = null;
+        let stream = null;
+        let intervalId = null;
+        let modelsLoaded = false;
+        let socket = null;
+        let isConnected = false;
+        let isRecording = false;
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let dataArray = null;
+        let animationId = null;
+
+        // Configuration
+        const MODELS_CDN_PATH = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
+        const SOCKET_URL = 'http://localhost:8081';
+        const AUDIO_SAMPLE_RATE = 16000;
+        const AUDIO_CHUNK_SIZE = 1024;
+
+        // Create audio visualizer bars
+        function createAudioBars() {
+            audioBars.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'audio-bar';
+                bar.style.height = '2px';
+                audioBars.appendChild(bar);
+            }
+        }
+
+        // Update audio visualizer
+        function updateAudioVisualizer() {
+            if (!analyser || !dataArray) return;
+
+            analyser.getByteFrequencyData(dataArray);
+            const bars = audioBars.children;
+            const step = Math.floor(dataArray.length / bars.length);
+
+            for (let i = 0; i < bars.length; i++) {
+                const value = dataArray[i * step];
+                const height = (value / 255) * 40;
+                bars[i].style.height = `${Math.max(2, height)}px`;
+            }
+
+            animationId = requestAnimationFrame(updateAudioVisualizer);
+        }
+
+        // Initialize audio processing
+        async function initializeAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                if (audioStream) {
+                    microphone = audioContext.createMediaStreamSource(audioStream);
+                    microphone.connect(analyser);
+                    createAudioBars();
+                    updateAudioVisualizer();
+                }
+            } catch (error) {
+                console.error('Error initializing audio:', error);
+            }
+        }
+
+        // Send audio data to AI server
+        function sendAudioData(audioData) {
+            if (socket && socket.connected) {
+                socket.emit('audio', {
+                    data: audioData,
+                    timestamp: Date.now()
+                });
+            }
+        }
+
+        // Connect to AI server using Socket.IO
+        async function connectToAIServer() {
+            try {
+                socket = io(SOCKET_URL);
+                
+                socket.on('connect', () => {
+                    isConnected = true;
+                    statusDot.classList.add('connected');
+                    statusText.textContent = 'Connected to AI Server';
+                    connectButton.disabled = true;
+                    console.log('Connected to AI server');
+                });
+
+                socket.on('disconnect', () => {
+                    isConnected = false;
+                    statusDot.classList.remove('connected');
+                    statusText.textContent = 'Disconnected';
+                    connectButton.disabled = false;
+                    console.log('Disconnected from AI server');
+                });
+
+                socket.on('emotion_analysis', (data) => {
+                    handleAIAnalysis(data);
+                });
+
+                socket.on('status', (data) => {
+                    console.log('Server status:', data.message);
+                });
+
+                socket.on('error', (data) => {
+                    console.error('Server error:', data.message);
+                    showMessageBox(data.message, 'error');
+                });
+
+            } catch (error) {
+                console.error('Error connecting to AI server:', error);
+                showMessageBox('Failed to connect to AI server.', 'error');
+            }
+        }
+
+        // Send facial analysis data to AI server
+        function sendFacialData(detections) {
+            if (socket && socket.connected && detections.length > 0) {
+                // Process all detected faces, not just the first one
+                detections.forEach((detection, index) => {
+                    const expressions = detection.expressions;
+                    console.log(`Sending facial data for face ${index + 1}:`, expressions);
+                    
+                    socket.emit('facial_analysis', {
+                        expressions: expressions,
+                        timestamp: Date.now(),
+                        faceIndex: index
+                    });
+                });
+            } else {
+                if (!socket) {
+                    console.log('Socket not connected');
+                } else if (!socket.connected) {
+                    console.log('Socket not connected');
+                } else if (detections.length === 0) {
+                    console.log('No faces detected');
+                }
+            }
+        }
+
+        // Update emotion probabilities display
+        function updateEmotionProbabilities(detections) {
+            const emotions = {
+                neutral: 0, happy: 0, sad: 0, angry: 0, fearful: 0, disgusted: 0, surprised: 0
+            };
+
+            if (detections.length > 0) {
+                // Calculate average emotions across all detected faces
+                detections.forEach(detection => {
+                    const expressions = detection.expressions;
+                    for (const emotion in expressions) {
+                        if (emotions.hasOwnProperty(emotion)) {
+                            emotions[emotion] += expressions[emotion];
+                        }
+                    }
+                });
+
+                // Average the emotions
+                for (const emotion in emotions) {
+                    emotions[emotion] = Math.round((emotions[emotion] / detections.length) * 100);
+                }
+                
+                // Local fallback aggression calculation
+                const angryScore = emotions.angry;
+                const fearfulScore = emotions.fearful;
+                const disgustedScore = emotions.disgusted;
+                
+                // Calculate local aggression score (weighted)
+                const localAggressionScore = Math.round(
+                    (angryScore * 0.4) + (fearfulScore * 0.3) + (disgustedScore * 0.2)
+                );
+                
+                // Update facial score display
+                facialScore.textContent = `${localAggressionScore}%`;
+                
+                // Update aggression bar if no AI response
+                if (!socket || !socket.connected) {
+                    // updateAggressionBar(localAggressionScore); // This function is removed
+                }
+            }
+
+            emotionNeutral.textContent = `Neutral: ${emotions.neutral}%`;
+            emotionHappy.textContent = `Happy: ${emotions.happy}%`;
+            emotionSad.textContent = `Sad: ${emotions.sad}%`;
+            emotionAngry.textContent = `Angry: ${emotions.angry}%`;
+            emotionFearful.textContent = `Fearful: ${emotions.fearful}%`;
+            emotionDisgusted.textContent = `Disgusted: ${emotions.disgusted}%`;
+            emotionSurprised.textContent = `Surprised: ${emotions.surprised}%`;
+        }
+
+        // Handle AI analysis results
+        function handleAIAnalysis(data) {
+            console.log('Received AI analysis:', data);
+            aiAnalysis.style.display = 'block';
+            // Option 3: Only show voice emotion if confidence is above threshold
+            const voiceConfidence = data.confidence || 0;
+            const voiceEmotion = data.voiceEmotion || 'Unknown';
+            const confidenceThreshold = 60;
+            if (voiceConfidence >= confidenceThreshold) {
+                aiVoiceEmotion.textContent = `Voice Emotion: ${voiceEmotion}`;
+            } else {
+                aiVoiceEmotion.textContent = `Voice Emotion: Uncertain`;
+            }
+            aiConfidence.textContent = `Confidence: ${voiceConfidence}%`;
+            aiRecommendation.textContent = `Recommendation: ${data.recommendation || 'No action needed'}`;
+            // Option 6: Show listening indicator if voice confidence is above threshold
+            if (voiceConfidence >= confidenceThreshold) {
+                listeningIndicator.style.display = 'inline';
+            } else {
+                listeningIndicator.style.display = 'none';
+            }
+            // Update the new Voice Detection tab
+            if (voiceConfidence >= confidenceThreshold) {
+                voiceDetectionText.textContent = voiceEmotion;
+            } else {
+                voiceDetectionText.textContent = 'Uncertain';
+            }
+            // Update score displays
+            facialScore.textContent = `${data.facialScore || 0}%`;
+            voiceScore.textContent = `${data.audioScore || 0}%`;
+            combinedScore.textContent = `${data.combinedScore || 0}%`;
+            
+            // Update face count if provided
+            if (data.faceCount !== undefined) {
+                faceCountDisplay.textContent = data.faceCount;
+                if (data.faceCount > 1) {
+                    multiFaceIndicator.style.display = 'block';
+                } else {
+                    multiFaceIndicator.style.display = 'none';
+                }
+            }
+            // Render emotion bar chart
+            renderEmotionBarChart(data.emotionBars);
+            // Render voice bar chart if present
+            // renderVoiceBarChart(data.audioBars); // This function is removed
+            // Update voice emotion probabilities display // This function is removed
+            // updateVoiceEmotionProbabilities(data.audioBars, data.multi_voice); // This function is removed
+
+            // Aggression popup logic
+            let facialAnger = data.emotionBars && data.emotionBars.angry ? data.emotionBars.angry : 0;
+            let voiceAnger = data.audioBars && data.audioBars.angry ? data.audioBars.angry : 0;
+            if (facialAnger > 40 || voiceAnger > 40) {
+                aggressionPopup.style.display = 'flex';
+            } else {
+                aggressionPopup.style.display = 'none';
+            }
+        }
+
+        // Message box functions
+        function showMessageBox(message, type) {
+            loadingMessage.classList.remove('show');
+            errorMessage.classList.remove('show');
+
+            if (type === 'loading') {
+                loadingMessage.textContent = message;
+                loadingMessage.classList.add('show');
+            } else if (type === 'error') {
+                errorMessage.textContent = message;
+                errorMessage.classList.add('show');
+            }
+        }
+
+        function hideMessageBoxes() {
+            loadingMessage.classList.remove('show');
+            errorMessage.classList.remove('show');
+        }
+
+        // Load face-api.js models
+        async function loadModels() {
+            showMessageBox('Loading facial recognition models... This may take a moment.', 'loading');
+            try {
+                await faceapi.nets.ssdMobilenetv1.loadFromUri(MODELS_CDN_PATH);
+                await faceapi.nets.faceExpressionNet.loadFromUri(MODELS_CDN_PATH);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODELS_CDN_PATH);
+                console.log('Models loaded successfully!');
+                modelsLoaded = true;
+                hideMessageBoxes();
+                startButton.disabled = false;
+            } catch (error) {
+                console.error('Error loading models:', error);
+                showMessageBox('Failed to load models. Please check your internet connection and try again.', 'error');
+                startButton.disabled = true;
+            }
+        }
+
+        // Start audio capture and sending
+        async function startAudioCapture() {
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(audioStream);
+                mediaRecorder.ondataavailable = function(e) {
+                    if (e.data && e.data.size > 0) {
+                        let reader = new FileReader();
+                        reader.onloadend = function() {
+                            const base64data = reader.result.split(',')[1];
+                            sendAudioData(base64data);
+                        };
+                        reader.readAsDataURL(e.data);
+                    }
+                };
+                mediaRecorder.start(1000); // Send audio every second
+                console.log("MediaRecorder started");
+            } catch (err) {
+                alert("Microphone access denied or not available.");
+                console.error(err);
+            }
+        }
+
+        // Stop audio capture
+        function stopAudioCapture() {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                mediaRecorder = null;
+            }
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+        }
+
+        // Start detection (camera + microphone)
+        async function startDetection() {
+            if (!modelsLoaded) {
+                showMessageBox('Models are still loading. Please wait...', 'loading');
+                return;
+            }
+
+            try {
+                // Start camera and audio
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: {
+                        sampleRate: AUDIO_SAMPLE_RATE,
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }
+                });
+                const videoTrack = stream.getVideoTracks()[0];
+                const audioTrack = stream.getAudioTracks()[0];
+                videoInput.srcObject = new MediaStream([videoTrack]);
+                audioStream = new MediaStream([audioTrack]);
+                await initializeAudio();
+                // Start MediaRecorder for audio
+                if (audioStream) {
+                    mediaRecorder = new MediaRecorder(audioStream);
+                    mediaRecorder.ondataavailable = function(e) {
+                        if (e.data && e.data.size > 0) {
+                            let reader = new FileReader();
+                            reader.onloadend = function() {
+                                const base64data = reader.result.split(',')[1];
+                                sendAudioData(base64data);
+                            };
+                            reader.readAsDataURL(e.data);
+                        }
+                    };
+                    mediaRecorder.start(1000); // Send audio every second
+                }
+                // Start video processing
+                videoInput.addEventListener('play', () => {
+                    function drawBoxWithPadding(box, ctx, color = '#3b82f6', padding = 0) {
+                        ctx.save();
+                        ctx.strokeStyle = color;
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.rect(
+                            Math.max(0, box.x - padding),
+                            Math.max(0, box.y - padding),
+                            box.width + 2 * padding,
+                            box.height + 2 * padding
+                        );
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                    const displaySize = { width: videoInput.videoWidth, height: videoInput.videoHeight };
+                    overlayCanvas.width = videoInput.videoWidth;
+                    overlayCanvas.height = videoInput.videoHeight;
+                    faceapi.matchDimensions(overlayCanvas, displaySize);
+                    intervalId = setInterval(async () => {
+                        const detections = await faceapi.detectAllFaces(
+                            videoInput,
+                            new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5, inputSize: 640 })
+                        ).withFaceLandmarks().withFaceExpressions();
+                        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                        const ctx = overlayCanvas.getContext('2d');
+                        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                        ctx.save();
+                        ctx.scale(-1, 1);
+                        ctx.translate(-overlayCanvas.width, 0);
+                        // Draw custom boxes and overlays
+                        resizedDetections.forEach(det => {
+                            // Draw filled semi-transparent overlay with padding and clamping
+                            const box = det.detection.box;
+                            const padding = 15;
+                            const x = Math.max(0, box.x - padding);
+                            const y = Math.max(0, box.y - padding);
+                            const w = Math.min(overlayCanvas.width - x, box.width + 2 * padding);
+                            const h = Math.min(overlayCanvas.height - y, box.height + 2 * padding);
+                            ctx.save();
+                            ctx.globalAlpha = 0.2;
+                            ctx.fillStyle = '#3b82f6';
+                            ctx.fillRect(x, y, w, h);
+                            ctx.globalAlpha = 1.0;
+                            ctx.strokeStyle = '#3b82f6';
+                            ctx.lineWidth = 3;
+                            ctx.strokeRect(x, y, w, h);
+                            ctx.restore();
+                        });
+                        faceapi.draw.drawFaceExpressions(overlayCanvas, resizedDetections);
+                        ctx.restore();
+                        updateEmotionProbabilities(resizedDetections);
+                        sendFacialData(resizedDetections);
+                        faceCountDisplay.textContent = resizedDetections.length;
+                        if (resizedDetections.length === 0) {
+                            setTimeout(() => {
+                                if (faceCountDisplay.textContent === '0') {
+                                    facialScore.textContent = '0%';
+                                    voiceScore.textContent = '0%';
+                                    combinedScore.textContent = '0%';
+                                }
+                            }, 2000);
+                        }
+                    }, 100);
+                });
+
+                isRecording = true;
+                statusDot.classList.add('recording');
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                hideMessageBoxes();
+
+            } catch (error) {
+                alert("Camera or microphone access denied or not available.");
+                console.error(error);
+                showMessageBox('Failed to access camera or microphone. Please ensure permissions are granted.', 'error');
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            }
+        }
+
+        // Stop detection
+        function stopDetection() {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                mediaRecorder = null;
+            }
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                videoInput.srcObject = null;
+                stream = null;
+            }
+            overlayCanvas.getContext('2d').clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            facialScore.textContent = '0%';
+            voiceScore.textContent = '0%';
+            combinedScore.textContent = '0%';
+            isRecording = false;
+            statusDot.classList.remove('recording');
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            hideMessageBoxes();
+        }
+
+        // Render emotion bar chart
+        function renderEmotionBarChart(emotionBars) {
+            const chartDiv = document.getElementById('emotionBarChart');
+            if (!emotionBars || Object.keys(emotionBars).length === 0) {
+                chartDiv.innerHTML = '';
+                return;
+            }
+            const colors = {
+                angry: '#ef4444',
+                happy: '#f59e42',
+                sad: '#3b82f6',
+                fearful: '#6366f1',
+                disgusted: '#10b981',
+                surprised: '#fbbf24',
+                neutral: '#6b7280'
+            };
+            chartDiv.innerHTML = Object.entries(emotionBars).map(([emotion, value]) => `
+                <div style="display:flex;align-items:center;margin-bottom:4px;">
+                    <span style="width:80px;text-transform:capitalize;font-size:0.95em;">${emotion}</span>
+                    <div style="flex:1;background:#e5e7eb;height:18px;border-radius:8px;overflow:hidden;margin:0 8px;">
+                        <div style="height:100%;width:${value}%;background:${colors[emotion]||'#3b82f6'};transition:width 0.3s;"></div>
+                    </div>
+                    <span style="width:36px;text-align:right;font-size:0.95em;">${value}%</span>
+                </div>
+            `).join('');
+        }
+
+        // Render voice bar chart
+        function renderVoiceBarChart(audioBars) {
+            const chartDiv = document.getElementById('voiceBarChart');
+            // Always show the bar chart, even if all values are zero or only neutral
+            const emotions = ['angry', 'happy', 'sad', 'fearful', 'disgusted', 'surprised', 'neutral'];
+            const colors = {
+                angry: '#ef4444',
+                happy: '#f59e42',
+                sad: '#3b82f6',
+                fearful: '#6366f1',
+                disgusted: '#10b981',
+                surprised: '#fbbf24',
+                neutral: '#6b7280'
+            };
+            // Fill missing emotions with 0
+            let bars = {};
+            emotions.forEach(e => {
+                bars[e] = audioBars && typeof audioBars[e] === 'number' ? audioBars[e] : 0;
+            });
+            chartDiv.innerHTML = '<div style="font-weight:600;margin-bottom:4px;">Voice Emotion Output</div>' +
+                Object.entries(bars).map(([emotion, value]) => `
+                <div style="display:flex;align-items:center;margin-bottom:4px;">
+                    <span style="width:80px;text-transform:capitalize;font-size:0.95em;">${emotion}</span>
+                    <div style="flex:1;background:#e5e7eb;height:18px;border-radius:8px;overflow:hidden;margin:0 8px;">
+                        <div style="height:100%;width:${value}%;background:${colors[emotion]||'#3b82f6'};transition:width 0.3s;"></div>
+                    </div>
+                    <span style="width:36px;text-align:right;font-size:0.95em;">${value}%</span>
+                </div>
+            `).join('');
+        }
+
+        // Update voice emotion probabilities display
+        function updateVoiceEmotionProbabilities(audioBars, multiVoice) {
+            const voiceEmotionsDisplay = document.getElementById('voiceEmotionsDisplay');
+            if (!audioBars || Object.keys(audioBars).length === 0) {
+                voiceEmotionsDisplay.style.display = 'none';
+                return;
+            }
+            voiceEmotionsDisplay.style.display = 'block';
+            const colors = {
+                angry: '#ef4444',
+                happy: '#f59e42',
+                sad: '#3b82f6',
+                fearful: '#6366f1',
+                disgusted: '#10b981',
+                surprised: '#fbbf24',
+                neutral: '#6b7280'
+            };
+            voiceEmotionsDisplay.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
+                <p><strong>Voice Emotion Probabilities:</strong></p>
+                <span id="multiVoiceIndicator" style="color:#ef4444;font-weight:600;font-size:0.95em;">${multiVoice ? 'Multiple Voices Detected' : 'Single Voice Detected'}</span>
+            </div>` +
+                Object.entries(audioBars).map(([emotion, value]) => `
+                <div style="display:flex;align-items:center;margin-bottom:4px;">
+                    <span style="width:80px;text-transform:capitalize;font-size:0.95em;">${emotion}</span>
+                    <div style="flex:1;background:#e5e7eb;height:18px;border-radius:8px;overflow:hidden;margin:0 8px;">
+                        <div style="height:100%;width:${value}%;background:${colors[emotion]||'#3b82f6'};transition:width 0.3s;"></div>
+                    </div>
+                    <span style="width:36px;text-align:right;font-size:0.95em;">${value}%</span>
+                </div>
+            `).join('');
+            if (Object.keys(audioBars).length > 1) {
+                multiVoiceIndicator.style.display = 'block';
+            } else {
+                multiVoiceIndicator.style.display = 'none';
+            }
+        }
+
+        // Event listeners
+        startButton.addEventListener('click', startDetection);
+        stopButton.addEventListener('click', stopDetection);
+        connectButton.addEventListener('click', connectToAIServer);
+
+        // Initialize
+        window.onload = () => {
+            loadModels();
+            createAudioBars();
+        };
+    </script>
+</body>
+</html>
