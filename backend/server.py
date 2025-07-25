@@ -16,6 +16,7 @@ import time
 from collections import deque
 import base64
 import os
+from flask_cors import CORS
 
 # Remove all SpeechBrain and related model loading code
 
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 # Flask app setup
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
+CORS(app, origins=["*"])
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Global variables for storing analysis data
@@ -288,7 +290,8 @@ def index():
 def run_server():
     """Run the Flask server with SocketIO"""
     logger.info("Starting AI Aggression Detection Server...")
-    socketio.run(app, host='0.0.0.0', port=8081, debug=False, allow_unsafe_werkzeug=True)
+    port = int(os.environ.get("PORT", 10000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=False, allow_unsafe_werkzeug=True)
 
 if __name__ == '__main__':
     run_server()
