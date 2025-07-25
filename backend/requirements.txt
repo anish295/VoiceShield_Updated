@@ -1,3 +1,4 @@
+python-3.8
 setuptools>=65.0.0
 wheel
 Flask==2.3.3
