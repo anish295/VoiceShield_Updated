@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Shield - AI-Powered Aggression Detection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            color: #e2e8f0;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 50%, rgba(15, 52, 96, 0.95) 100%);
+            backdrop-filter: blur(10px);
+        }
+        
+        .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+        
+        .team-card {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: #e2e8f0;
+        }
+        
+        .team-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+        
+        .floating-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .feature-icon {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .cta-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .cta-button:hover::before {
+            left: 100%;
+        }
+        
+        .parallax-bg {
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        
+        .tech-stack-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .tech-stack-icon:hover {
+            transform: scale(1.2) rotate(5deg);
+        }
+        
+        .scroll-indicator {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .wave-animation {
+            animation: wave 2s ease-in-out infinite;
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(20deg); }
+            75% { transform: rotate(-20deg); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="fixed top-0 w-full z-50 glass-card">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-shield-alt text-2xl text-white"></i>
+                    <span class="text-xl font-bold text-white">Voice Shield</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#home" class="text-white hover:text-blue-200 transition-colors">Home</a>
+                    <a href="#features" class="text-white hover:text-blue-200 transition-colors">Features</a>
+                    <a href="#team" class="text-white hover:text-blue-200 transition-colors">Team</a>
+                    <a href="#demo" class="text-white hover:text-blue-200 transition-colors">Demo</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="hero-section min-h-screen flex items-center justify-center relative">
+        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="container mx-auto px-6 text-center relative z-10">
+            <div class="animate__animated animate__fadeInUp">
+                <h1 class="text-5xl md:text-7xl font-bold text-white mb-6">
+                    Voice Shield
+                </h1>
+                <p class="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
+                    AI-Powered Aggression Detection System
+                </p>
+                <p class="text-lg text-blue-200 mb-12 max-w-4xl mx-auto leading-relaxed">
+                    Advanced emotion detection combining facial expression analysis and voice emotion recognition 
+                    to detect aggression levels in real-time. Protect and monitor environments with cutting-edge AI technology.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <button onclick="scrollToDemo()" class="cta-button text-white px-8 py-4 rounded-full text-lg font-semibold flex items-center space-x-2">
+                        <i class="fas fa-play"></i>
+                        <span>Try Demo</span>
+                    </button>
+                    <button onclick="scrollToFeatures()" class="glass-card text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white hover:bg-opacity-20 transition-all">
+                        Learn More
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="absolute top-20 left-10 floating-animation">
+            <i class="fas fa-brain text-4xl text-white opacity-30"></i>
+        </div>
+        <div class="absolute top-40 right-20 floating-animation" style="animation-delay: -2s;">
+            <i class="fas fa-microphone text-3xl text-white opacity-30"></i>
+        </div>
+        <div class="absolute bottom-40 left-20 floating-animation" style="animation-delay: -4s;">
+            <i class="fas fa-eye text-3xl text-white opacity-30"></i>
+        </div>
+        
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 scroll-indicator">
+            <i class="fas fa-chevron-down text-white text-2xl"></i>
+        </div>
+    </section>
+
+    <section id="features" class="py-20 bg-slate-900">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold gradient-text mb-4">Key Features</h2>
+                <p class="text-xl text-slate-300 max-w-3xl mx-auto">
+                    Discover the powerful capabilities of our AI-powered aggression detection system
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="team-card p-8 rounded-2xl text-center">
+                    <div class="feature-icon text-5xl mb-4">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Real-time Facial Analysis</h3>
+                    <p class="text-slate-300">Uses face-api.js for detecting 7 different emotions with high accuracy</p>
+                </div>
+                
+                <div class="team-card p-8 rounded-2xl text-center">
+                    <div class="feature-icon text-5xl mb-4">
+                        <i class="fas fa-microphone-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Voice Emotion Detection</h3>
+                    <p class="text-slate-300">Analyzes audio patterns for voice emotion indicators and aggression cues</p>
+                </div>
+                
+                <div class="team-card p-8 rounded-2xl text-center">
+                    <div class="feature-icon text-5xl mb-4">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Combined AI Analysis</h3>
+                    <p class="text-slate-300">Integrates both visual and audio cues for comprehensive aggression detection</p>
+                </div>
+                
+                <div class="team-card p-8 rounded-2xl text-center">
+                    <div class="feature-icon text-5xl mb-4">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Real-time Communication</h3>
+                    <p class="text-slate-300">Socket.IO for seamless data transmission and instant analysis results</p>
+                </div>
+                
+                <div class="team-card p-8 rounded-2xl text-center">
+                    <div class="feature-icon text-5xl mb-4">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Comprehensive Scoring</h3>
+                    <p class="text-slate-300">Separate scores for facial, voice, and combined analysis with confidence levels</p>
+                </div>
+                
+                <div class="team-card p-8 rounded-2xl text-center">
+                    <div class="feature-icon text-5xl mb-4">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Modern UI</h3>
+                    <p class="text-slate-300">Beautiful, responsive interface with real-time visualizations and audio feedback</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-slate-800">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold gradient-text mb-4">Technology Stack</h2>
+                <p class="text-xl text-slate-300">Built with modern technologies for optimal performance</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+                <div class="text-center">
+                    <div class="tech-stack-icon text-6xl mb-4">
+                        <i class="fab fa-html5 text-orange-500"></i>
+                    </div>
+                    <p class="font-semibold text-slate-200">HTML5</p>
+                </div>
+                <div class="text-center">
+                    <div class="tech-stack-icon text-6xl mb-4">
+                        <i class="fab fa-css3-alt text-blue-400"></i>
+                    </div>
+                    <p class="font-semibold text-slate-200">CSS3</p>
+                </div>
+                <div class="text-center">
+                    <div class="tech-stack-icon text-6xl mb-4">
+                        <i class="fab fa-js-square text-yellow-400"></i>
+                    </div>
+                    <p class="font-semibold text-slate-200">JavaScript</p>
+                </div>
+                <div class="text-center">
+                    <div class="tech-stack-icon text-6xl mb-4">
+                        <i class="fab fa-python text-green-400"></i>
+                    </div>
+                    <p class="font-semibold text-slate-200">Python</p>
+                </div>
+                <div class="text-center">
+                    <div class="tech-stack-icon text-6xl mb-4">
+                        <i class="fas fa-flask text-slate-400"></i>
+                    </div>
+                    <p class="font-semibold text-slate-200">Flask</p>
+                </div>
+                <div class="text-center">
+                    <div class="tech-stack-icon text-6xl mb-4">
+                        <i class="fas fa-project-diagram text-purple-400"></i>
+                    </div>
+                    <p class="font-semibold text-slate-200">Socket.IO</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="team" class="py-20 bg-slate-900">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold gradient-text mb-4">Our Team - The Generals</h2>
+                <p class="text-xl text-slate-300 max-w-3xl mx-auto">
+                    Meet the talented individuals behind Voice Shield's innovative AI-powered aggression detection system
+                </p>
+            </div>
+            
+            <div class="flex flex-wrap items-stretch justify-center gap-8">
+                <div class="team-card p-8 rounded-2xl text-center w-full md:w-[45%] lg:w-[30%]">
+                    <div class="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto mb-6 flex items-center justify-center">
+                        <i class="fas fa-user text-3xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Anish Kumar</h3>
+                    <p class="text-blue-400 font-medium mb-3">Lead AI & ML Engineer</p>
+                    <p class="text-slate-300 text-sm mb-4">
+                        Architects the core machine learning models for both facial and voice emotion recognition, driving the project's AI capabilities.
+                    </p>
+                    <div class="flex justify-center space-x-3">
+                        <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="team-card p-8 rounded-2xl text-center w-full md:w-[45%] lg:w-[30%]">
+                    <div class="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full mx-auto mb-6 flex items-center justify-center">
+                        <i class="fas fa-user text-3xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Ayush Raj</h3>
+                    <p class="text-blue-400 font-medium mb-3">Full-Stack Developer</p>
+                    <p class="text-slate-300 text-sm mb-4">
+                        Develops the end-to-end web application, integrating the AI models and ensuring seamless real-time communication.
+                    </p>
+                    <div class="flex justify-center space-x-3">
+                        <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="team-card p-8 rounded-2xl text-center w-full md:w-[45%] lg:w-[30%]">
+                    <div class="w-24 h-24 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full mx-auto mb-6 flex items-center justify-center">
+                        <i class="fas fa-user text-3xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Hriday Poladia</h3>
+                    <p class="text-blue-400 font-medium mb-3">UI/UX & Frontend Specialist</p>
+                    <p class="text-slate-300 text-sm mb-4">
+                        Designs and implements the user interface, focusing on creating an intuitive and visually appealing experience for the user.
+                    </p>
+                    <div class="flex justify-center space-x-3">
+                        <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="team-card p-8 rounded-2xl text-center w-full md:w-[45%] lg:w-[30%]">
+                    <div class="w-24 h-24 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mx-auto mb-6 flex items-center justify-center">
+                        <i class="fas fa-user text-3xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Saurabh Maurya</h3>
+                    <p class="text-blue-400 font-medium mb-3">Backend & DevOps Engineer</p>
+                    <p class="text-slate-300 text-sm mb-4">
+                        Manages the server-side logic, API development, and deployment, ensuring a scalable and robust infrastructure.
+                    </p>
+                    <div class="flex justify-center space-x-3">
+                        <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="team-card p-8 rounded-2xl text-center w-full md:w-[45%] lg:w-[30%]">
+                    <div class="w-24 h-24 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full mx-auto mb-6 flex items-center justify-center">
+                        <i class="fas fa-user text-3xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Ajit Maurya</h3>
+                    <p class="text-blue-400 font-medium mb-3">Data & Audio Processing Specialist</p>
+                    <p class="text-slate-300 text-sm mb-4">
+                        Specializes in audio signal processing and data pipeline management, refining the accuracy of voice-based emotion detection.
+                    </p>
+                    <div class="flex justify-center space-x-3">
+                        <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="demo" class="py-20 bg-gradient-to-br from-slate-800 to-slate-900">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl font-bold gradient-text mb-6">Ready to Experience Voice Shield?</h2>
+                <p class="text-xl text-slate-300 mb-8">
+                    Try our AI-powered aggression detection system in real-time. 
+                    Experience the future of emotion recognition technology.
+                </p>
+                
+                <div class="relative inline-block">
+                    <a href="index.html" id="demoLink" onclick="launchDemo(event)" class="cta-button text-white px-12 py-6 rounded-full text-xl font-bold inline-flex items-center space-x-3 mx-auto pulse-animation">
+                        <i class="fas fa-rocket text-2xl"></i>
+                        <span>Launch Demo</span>
+                        <i class="fas fa-arrow-right text-xl"></i>
+                    </a>
+                    
+                    <div id="loadingAnimation" class="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-0 transition-opacity duration-500 pointer-events-none">
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 bg-white rounded-full animate-bounce"></div>
+                            <div class="w-3 h-3 bg-white rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                            <div class="w-3 h-3 bg-white rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="text-sm text-slate-400 mt-6">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    You'll need to grant camera and microphone permissions to use the demo
+                </p>
+                
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-950 text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col items-center justify-center">
+                <div class="flex flex-col items-center space-y-4 mb-8">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-shield-alt text-3xl text-blue-400"></i>
+                        <span class="text-3xl font-bold">Voice Shield</span>
+                    </div>
+                    <p class="text-slate-400 text-lg text-center max-w-md">
+                        AI-powered aggression detection for a safer environment.
+                    </p>
+                </div>
+                
+                <div class="border-t border-slate-800 w-full pt-8 text-center text-slate-400">
+                    <p>&copy; 2024 Voice Shield. All rights reserved. Built with ❤️ for a safer future.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation
+        function scrollToDemo() {
+            document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function scrollToFeatures() {
+            document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Launch demo with animation
+        function launchDemo(event) {
+            // Stop the link from navigating immediately
+            event.preventDefault();
+            
+            const link = document.getElementById('demoLink');
+            const loading = document.getElementById('loadingAnimation');
+            
+            if (!link || !loading) {
+                // CORRECTED: If elements aren't found, fall back to navigating directly
+                window.location.href = 'index.html'; 
+                return;
+            }
+            
+            // Show loading animation
+            link.style.opacity = '0';
+            loading.style.opacity = '1';
+            
+            // Wait for animation, then navigate
+            setTimeout(() => {
+                // Navigate to the href from the link
+                window.location.href = link.href;
+            }, 1500); // 1.5 seconds
+        }
+        
+        // Add scroll effects
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                nav.style.background = 'rgba(30, 41, 59, 0.9)';
+                nav.style.backdropFilter = 'blur(20px)';
+            } else {
+                nav.style.background = 'rgba(30, 41, 59, 0.8)';
+                nav.style.backdropFilter = 'blur(10px)';
+            }
+        });
+        
+        // Add intersection observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+                }
+            });
+        }, observerOptions);
+        
+        // Observe all team cards and feature cards
+        document.querySelectorAll('.team-card').forEach(card => {
+            observer.observe(card);
+        });
+        
+        // Add wave animation to demo button on hover
+        document.getElementById('demoLink').addEventListener('mouseenter', function() {
+            this.style.animation = 'wave 0.5s ease-in-out';
+        });
+        
+        document.getElementById('demoLink').addEventListener('animationend', function() {
+            this.style.animation = 'pulse 2s infinite';
+        });
+    </script>
+</body>
+</html>
