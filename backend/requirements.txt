@@ -1,8 +1,0 @@
-setuptools>=65.0.0
-wheel
-Flask==2.3.3
-Flask-SocketIO==5.3.6
-python-socketio==5.9.0
-numpy>=1.26.4
-websockets==11.0.3 
-flask-cors
