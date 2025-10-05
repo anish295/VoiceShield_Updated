@@ -1,0 +1,69 @@
+# VoiceShield Configuration File
+
+# System Settings
+system:
+  debug: false
+  log_level: "INFO"
+  max_fps: 60
+  target_latency: 0.5
+
+# Video Processing
+video:
+  camera_index: 0
+  frame_width: 1280
+  frame_height: 720
+  face_detection_confidence: 0.6
+  max_faces: 10
+  
+# Audio Processing
+audio:
+  sample_rate: 16000
+  chunk_size: 1024
+  channels: 1
+  format: "int16"
+  device_index: null
+  
+# Facial Emotion Recognition
+facial_emotion:
+  model: "deepface"
+  backend: "opencv"
+  confidence_threshold: 0.05
+  quality_threshold: 0.1
+  temporal_smoothing: 0.3
+  emotions:
+    - "angry"
+    - "happy"
+    - "sad"
+    - "fearful"
+    - "neutral"
+    - "surprised"
+    - "disgusted"
+
+# Voice Emotion Recognition
+voice_emotion:
+  model: "speechbrain"
+  window_size: 2.0
+  overlap: 0.3
+  confidence_threshold: 0.05
+  emotions:
+    - "angry"
+    - "happy"
+    - "sad"
+    - "fearful"
+    - "neutral"
+    
+# Fusion Engine
+fusion:
+  method: "weighted_average"
+  weights:
+    facial: 0.6
+    voice: 0.4
+  aggression_threshold: 0.7
+  
+# Alert System
+alerts:
+  enabled: true
+  aggression_alert:
+    enabled: true
+
+

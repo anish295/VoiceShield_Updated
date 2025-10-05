@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceShield - WORKING UI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%); color: #e2e8f0; margin: 0; }
+        .header { background: rgba(20, 25, 40, 0.95); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 1.25rem 0; }
+        .header-inner { max-width: 1200px; margin: 0 auto; padding: 0 1rem; display: flex; align-items: center; gap: 1rem; }
+        .header h1 { margin: 0; font-size: 1.75rem; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .container { max-width: 1200px; margin: 1.25rem auto; padding: 0 1rem; display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; }
+        .card { background: rgba(30, 35, 50, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+        .video-card { padding: 1rem; }
+        .video-wrap { position: relative; border-radius: 10px; overflow: hidden; }
+        #videoFeed { width: 100%; display: none; }
+        #processedFrame { display: none; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .controls { display: flex; gap: .5rem; margin-top: .75rem; }
+        .btn { padding: .6rem 1rem; border-radius: .6rem; border: none; font-weight: 600; cursor: pointer; }
+        .btn-start { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; }
+        .btn-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+        .status { margin-top: .75rem; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+        .status-row { display: flex; align-items: center; justify-content: space-between; padding: .5rem .75rem; background: rgba(255,255,255,0.03); border-radius: 8px; }
+        .emotions { padding: 1rem; display: grid; gap: 1rem; }
+        .emotion-card { padding: .75rem; border-radius: 10px; background: rgba(20, 25, 40, 0.95); border: 1px solid rgba(255,255,255,0.08); }
+        .emotion-title { margin: 0 0 .5rem 0; font-size: 1rem; color: #e2e8f0; }
+        .no-emotions { color: #94a3b8; font-style: italic; }
+        .anger-config { padding: 1rem; margin-top: .5rem; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; background: linear-gradient(135deg, #1e293b, #334155); }
+        label { color: #e2e8f0; font-weight: 500; font-size: .9rem; }
+        .cfg-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: .5rem 0; }
+        input[type="range"] { flex: 1; }
+    </style>
+    </head>
+<body>
+    <div class="header"><div class="header-inner"><h1>VoiceShield</h1><div style="opacity:.8">Real-time Multimodal Emotion Detection</div></div></div>
+    <div class="container">
+        <div class="card video-card">
+            <div class="video-wrap">
+                <video id="videoFeed" autoplay muted playsinline></video>
+                <img id="processedFrame" />
+                <div id="videoPlaceholder" style="height:360px;display:flex;align-items:center;justify-content:center;color:#94a3b8;border:1px dashed rgba(255,255,255,0.15);border-radius:10px;">Click Start to access camera</div>
+            </div>
+            <div class="controls">
+                <button id="startBtn" class="btn btn-start">Start System</button>
+                <button id="stopBtn" class="btn btn-stop" disabled>Stop</button>
+            </div>
+            <div class="status">
+                <div class="status-row"><div>Camera</div><div id="cameraStatus">Inactive</div></div>
+                <div class="status-row"><div>Face Detection</div><div id="faceStatus">Not Ready</div></div>
+                <div class="status-row"><div>Microphone</div><div id="audioStatus">Not Ready</div></div>
+                <div class="status-row"><div>System</div><div id="systemStatus">Stopped</div></div>
+            </div>
+            <div class="anger-config">
+                <div style="margin-bottom:.5rem;color:#ef4444;font-weight:700;">⚠️ Anger Alert Configuration</div>
+                <div class="cfg-row"><label>Threshold</label><input id="angerThreshold" type="range" min="0.1" max="1.0" step="0.1" value="0.6" /><span id="thresholdValue">60%</span></div>
+                <div class="cfg-row"><label>Cooldown (s)</label><input id="angerCooldown" type="number" min="5" max="300" value="30" /></div>
+                <div class="cfg-row"><label>Enabled</label><input id="angerEnabled" type="checkbox" checked /></div>
+                <button id="saveAngerConfig" class="btn btn-stop" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">Save</button>
+            </div>
+        </div>
+        <div class="card emotions">
+            <div class="emotion-card"><h3 class="emotion-title">🛡️ Overall</h3><div id="overallEmotions"><div class="no-emotions">System ready - show your face or speak!</div></div></div>
+            <div class="emotion-card"><h3 class="emotion-title">👤 Facial</h3><div id="facial-emotions"><div class="no-emotions">Ready to detect facial emotions</div></div></div>
+            <div class="emotion-card"><h3 class="emotion-title">🎤 Voice</h3><div id="voiceEmotions"><div class="no-emotions">Voice detection ready</div></div></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5001';
+        const socket = io(API_URL, { transports: ['websocket','polling'], timeout: 20000, forceNew: true });
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const videoFeed = document.getElementById('videoFeed');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const processedFrame = document.getElementById('processedFrame');
+        const overallEmotions = document.getElementById('overallEmotions');
+        const facialEmotions = document.getElementById('facial-emotions');
+        const voiceEmotions = document.getElementById('voiceEmotions');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const faceStatus = document.getElementById('faceStatus');
+        const audioStatus = document.getElementById('audioStatus');
+        const systemStatus = document.getElementById('systemStatus');
+        const angerThreshold = document.getElementById('angerThreshold');
+        const thresholdValue = document.getElementById('thresholdValue');
+        const angerCooldown = document.getElementById('angerCooldown');
+        const angerEnabled = document.getElementById('angerEnabled');
+        const saveAngerConfig = document.getElementById('saveAngerConfig');
+
+        let videoStream = null;
+        let frameSenderInterval = null;
+        let audioContext = null, audioSource = null, audioProcessor = null;
+
+        socket.on('connect', () => { updateSystemStatus(); });
+        socket.on('emotion_update', (data) => updateEmotions(data));
+        socket.on('processed_frame', (data) => {
+            if (data.frame) {
+                processedFrame.src = 'data:image/jpeg;base64,' + data.frame;
+                processedFrame.style.display = 'block';
+                videoFeed.style.opacity = '0.3';
+            }
+        });
+
+        function updateEmotions(data) {
+            if (data.facial && data.facial.length > 0) {
+                const f = data.facial[0];
+                facialEmotions.innerHTML = `<div class="emotion-display"><div class="emotion-name">${f.emotion}</div><div class="emotion-confidence">Confidence: ${(f.confidence*100).toFixed(1)}%</div></div>`;
+            } else {
+                facialEmotions.innerHTML = '<div class="no-emotions">Looking for faces…</div>';
+            }
+            if (data.voice && data.voice.length > 0 && data.voice[0].source === 'real_audio') {
+                const v = data.voice[0];
+                voiceEmotions.innerHTML = `<div class="emotion-display"><div class="emotion-name">${v.emotion || 'Unknown'}</div><div class="emotion-confidence">Confidence: ${((v.confidence||0)*100).toFixed(1)}%</div></div>`;
+            } else {
+                voiceEmotions.innerHTML = '<div class="no-emotions">Speak into microphone…</div>';
+            }
+            if (data.overall && data.overall.emotion) {
+                const o = data.overall;
+                overallEmotions.innerHTML = `<div class="emotion-display"><div class="emotion-name">${o.emotion}</div><div class="emotion-confidence">Confidence: ${((o.confidence||0)*100).toFixed(1)}%</div></div>`;
+                // Show anger popup if above threshold
+                try {
+                    const angerThreshold = parseFloat(document.getElementById('angerThreshold')?.value || '0.6');
+                    const overallConfidence = (o.confidence || 0);
+                    const isAngry = (o.emotion || '').toLowerCase() === 'angry';
+                    // If we have facial or voice scores, derive combined anger; else use overall when angry
+                    const facialAnger = (data.facial && data.facial[0] && data.facial[0].all_scores && data.facial[0].all_scores.angry) ? data.facial[0].all_scores.angry : 0;
+                    const voiceAnger = (data.voice && data.voice[0] && data.voice[0].all_scores && data.voice[0].all_scores.angry) ? data.voice[0].all_scores.angry : 0;
+                    const combinedAnger = Math.max(voiceAnger, facialAnger, isAngry ? overallConfidence : 0);
+                    if (combinedAnger >= angerThreshold) {
+                        showAngerPopup(Math.round(combinedAnger * 100));
+                    }
+                } catch (e) {}
+            } else {
+                overallEmotions.innerHTML = '<div class="no-emotions">Show your face or speak…</div>';
+            }
+        }
+
+        function showAngerPopup(angerPercent) {
+            const existing = document.getElementById('anger-popup');
+            if (existing) existing.remove();
+            const div = document.createElement('div');
+            div.id = 'anger-popup';
+            div.style.position = 'fixed';
+            div.style.top = '20px';
+            div.style.right = '20px';
+            div.style.zIndex = '9999';
+            div.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+            div.style.color = '#fff';
+            div.style.padding = '14px 18px';
+            div.style.border = '2px solid #fca5a5';
+            div.style.borderRadius = '10px';
+            div.style.boxShadow = '0 12px 24px rgba(220,38,38,0.35)';
+            div.innerHTML = `<strong>ANGER DETECTED</strong><br/>Level: ${angerPercent}%`;
+            document.body.appendChild(div);
+            setTimeout(() => { if (div && div.parentNode) div.remove(); }, 6000);
+        }
+
+        async function loadAngerConfiguration() {
+            try {
+                const res = await fetch(`${API_URL}/api/anger_alert/config`);
+                const cfg = await res.json();
+                angerThreshold.value = cfg.threshold; thresholdValue.textContent = Math.round(cfg.threshold*100)+'%';
+                angerCooldown.value = cfg.cooldown; angerEnabled.checked = cfg.enabled;
+            } catch {}
+        }
+        async function saveAngerConfigurationFn() {
+            try {
+                const body = { threshold: parseFloat(angerThreshold.value), cooldown: parseInt(angerCooldown.value), enabled: angerEnabled.checked };
+                const res = await fetch(`${API_URL}/api/anger_alert/config`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+                const result = await res.json();
+                if (result.success) { const t = saveAngerConfig.textContent; saveAngerConfig.textContent='Saved!'; setTimeout(()=>saveAngerConfig.textContent=t,1500); }
+            } catch {}
+        }
+
+        angerThreshold.addEventListener('input', () => { thresholdValue.textContent = Math.round(angerThreshold.value*100)+'%'; });
+        saveAngerConfig.addEventListener('click', saveAngerConfigurationFn);
+
+        async function initializeAudioProcessing(stream) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') { await audioContext.resume(); }
+            audioSource = audioContext.createMediaStreamSource(stream);
+            audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+            audioProcessor.onaudioprocess = (e) => {
+                try {
+                    const input = e.inputBuffer.getChannelData(0);
+                    const audioArray = Array.from(input);
+                    const energy = audioArray.reduce((s,x)=>s+Math.abs(x),0)/Math.max(1,audioArray.length);
+                    if (energy > 0.001) {
+                        socket.emit('audio_chunk', { audio_data: audioArray, timestamp: Date.now(), sample_rate: audioContext.sampleRate });
+                    }
+                } catch {}
+            };
+            audioSource.connect(audioProcessor); audioProcessor.connect(audioContext.destination);
+        }
+
+        async function startSystem() {
+            try {
+                startBtn.disabled = true; startBtn.textContent = 'Starting…';
+                const resp = await fetch(`${API_URL}/api/start`, { method:'POST' });
+                const result = await resp.json();
+                if (!result.success) { throw new Error(result.error||'Start failed'); }
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }, audio: true });
+                videoFeed.srcObject = videoStream; videoFeed.style.display='block'; videoPlaceholder.style.display='none';
+                await initializeAudioProcessing(videoStream);
+                frameSenderInterval = setInterval(()=>sendFrameToServer(videoFeed), 100);
+                stopBtn.disabled = false; startBtn.textContent = 'Started';
+                updateSystemStatus();
+            } catch (e) {
+                alert('Failed to start: '+e.message);
+                startBtn.disabled = false; startBtn.textContent = 'Start System';
+            }
+        }
+
+        function sendFrameToServer(video) {
+            if (!video.videoWidth || !video.videoHeight) { return; }
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d'); ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const frameData = canvas.toDataURL('image/jpeg', 0.7);
+            socket.emit('process_frame', { image: frameData });
+        }
+
+        async function stopSystem() {
+            try {
+                stopBtn.disabled = true; stopBtn.textContent = 'Stopping…';
+                if (frameSenderInterval) { clearInterval(frameSenderInterval); frameSenderInterval=null; }
+                if (audioProcessor) { audioProcessor.disconnect(); audioProcessor=null; }
+                if (audioSource) { audioSource.disconnect(); audioSource=null; }
+                if (audioContext && audioContext.state!=='closed') { audioContext.close(); audioContext=null; }
+                if (videoStream) { videoStream.getTracks().forEach(t=>t.stop()); videoStream=null; }
+                videoFeed.style.display='none'; videoPlaceholder.style.display='flex';
+                const resp = await fetch(`${API_URL}/api/stop`, { method:'POST' }); await resp.json();
+                startBtn.disabled = false; startBtn.textContent='Start System'; stopBtn.textContent='Stop';
+                facialEmotions.innerHTML = '<div class="no-emotions">Ready to detect facial emotions</div>';
+                voiceEmotions.innerHTML = '<div class="no-emotions">Voice detection ready</div>';
+                overallEmotions.innerHTML = '<div class="no-emotions">System ready - show your face or speak!</div>';
+                updateSystemStatus();
+            } catch { stopBtn.disabled = false; stopBtn.textContent='Stop'; }
+        }
+
+        async function updateSystemStatus() {
+            try {
+                const res = await fetch(`${API_URL}/api/status`); const st = await res.json();
+                cameraStatus.textContent = st.camera_active ? 'Active' : 'Inactive';
+                faceStatus.textContent = st.face_detection_ready ? 'Ready' : 'Not Ready';
+                audioStatus.textContent = st.audio_active ? 'Active' : 'Inactive';
+                systemStatus.textContent = st.system_running ? 'WORKING!' : 'Stopped';
+            } catch {}
+        }
+
+        startBtn.addEventListener('click', startSystem);
+        stopBtn.addEventListener('click', stopSystem);
+        loadAngerConfiguration();
+        setInterval(updateSystemStatus, 3000);
+    </script>
+</body>
+</html>

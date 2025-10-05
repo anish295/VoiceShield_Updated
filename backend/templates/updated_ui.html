@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Shield - AI-Powered Aggression Detection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            color: #e2e8f0;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 50%, rgba(15, 52, 96, 0.95) 100%);
+            backdrop-filter: blur(10px);
+        }
+        
+        .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        
+        #videoFeed {
+            width: 100%;
+            border-radius: 12px;
+            transform: scaleX(-1); /* Mirror the video */
+        }
+        
+        #faceCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            /* No transform here - we'll handle mirroring in JavaScript */
+        }
+        
+        .cta-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <header class="py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">VoiceShield</h1>
+                    <p class="ml-4 text-slate-300">AI-Powered Aggression Detection</p>
+                </div>
+                <nav>
+                    <ul class="flex space-x-6">
+                        <li><a href="#features" class="text-slate-300 hover:text-white">Features</a></li>
+                        <li><a href="#demo" class="text-slate-300 hover:text-white">Demo</a></li>
+                        <li><a href="#about" class="text-slate-300 hover:text-white">About</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="demo" class="py-12">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-8">Live Demo</h2>
+                
+                <div class="glass-card p-6 max-w-4xl mx-auto">
+                    <div class="video-container mb-6">
+                        <video id="videoFeed" autoplay muted playsinline></video>
+                        <canvas id="faceCanvas"></canvas>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4 mb-6">
+                        <button id="startBtn" class="cta-button px-6 py-3 rounded-lg font-semibold">
+                            <i class="fas fa-play mr-2"></i> Start Detection
+                        </button>
+                        <button id="stopBtn" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold text-white" disabled>
+                            <i class="fas fa-stop mr-2"></i> Stop
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="glass-card p-4 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-2">🛡️ Overall Analysis</h3>
+                            <div id="overallEmotions" class="text-slate-300">
+                                <div class="italic">System ready - show your face or speak!</div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-4 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-2">👤 Facial Analysis</h3>
+                            <div id="facial-emotions" class="text-slate-300">
+                                <div class="italic">Ready to detect facial emotions</div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-4 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-2">🎤 Voice Analysis</h3>
+                            <div id="voiceEmotions" class="text-slate-300">
+                                <div class="italic">Voice detection ready</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Face detection setup
+        const video = document.getElementById('videoFeed');
+        const canvas = document.getElementById('faceCanvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const facialEmotions = document.getElementById('facial-emotions');
+        const voiceEmotions = document.getElementById('voiceEmotions');
+        const overallEmotions = document.getElementById('overallEmotions');
+        
+        let isProcessing = false;
+        let stream = null;
+        
+        // Load face-api.js models
+        async function loadModels() {
+            try {
+                await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights');
+                await faceapi.nets.faceExpressionNet.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights');
+                console.log('Models loaded successfully');
+            } catch (error) {
+                console.error('Error loading models:', error);
+            }
+        }
+        
+        // Start video and face detection
+        async function startVideo() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                video.srcObject = stream;
+                
+                video.addEventListener('play', () => {
+                    // Set canvas dimensions to match video
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    
+                    // Start face detection
+                    detectFaces();
+                });
+                
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                facialEmotions.innerHTML = `<div class="text-red-500">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Stop video and face detection
+        function stopVideo() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Reset UI
+                facialEmotions.innerHTML = '<div class="italic">Ready to detect facial emotions</div>';
+                voiceEmotions.innerHTML = '<div class="italic">Voice detection ready</div>';
+                overallEmotions.innerHTML = '<div class="italic">System ready - show your face or speak!</div>';
+                
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+        }
+        
+        // Detect faces and expressions
+        async function detectFaces() {
+            if (video.paused || video.ended) return;
+            
+            try {
+                if (!isProcessing) {
+                    isProcessing = true;
+                    
+                    // Detect faces with expressions
+                    const detections = await faceapi.detectAllFaces(
+                        video, 
+                        new faceapi.TinyFaceDetectorOptions()
+                    ).withFaceExpressions();
+                    
+                    // Clear previous drawings
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    if (detections.length > 0) {
+                        // Fix direction issue by flipping the context horizontally
+                        ctx.save();
+                        ctx.scale(-1, 1); // This flips horizontally
+                        ctx.translate(-canvas.width, 0);
+                        
+                        // Draw the detections with corrected coordinates
+                        const resizedDetections = faceapi.resizeResults(detections, { width: video.videoWidth, height: video.videoHeight });
+                        faceapi.draw.drawDetections(canvas, resizedDetections);
+                        faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+                        
+                        // Restore the context to normal
+                        ctx.restore();
+                        
+                        // Update facial emotions display
+                        const expressions = detections[0].expressions;
+                        const topExpression = Object.entries(expressions).sort((a, b) => b[1] - a[1])[0];
+                        const emotion = topExpression[0];
+                        const confidence = topExpression[1];
+                        
+                        facialEmotions.innerHTML = `
+                            <div class="font-semibold text-lg capitalize">${emotion}</div>
+                            <div class="text-sm">Confidence: ${(confidence * 100).toFixed(1)}%</div>
+                        `;
+                    } else {
+                        facialEmotions.innerHTML = '<div class="italic">Looking for faces...</div>';
+                    }
+                    
+                    isProcessing = false;
+                }
+            } catch (error) {
+                console.error('Error in face detection:', error);
+                isProcessing = false;
+            }
+            
+            // Continue detection loop
+            requestAnimationFrame(detectFaces);
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', async () => {
+            await loadModels();
+            startVideo();
+        });
+        
+        stopBtn.addEventListener('click', stopVideo);
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('VoiceShield UI loaded');
+        });
+    </script>
+</body>
+</html>
